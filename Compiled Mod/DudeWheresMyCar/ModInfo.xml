@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xml>
+	<Name value="DudeWheresMyCar" />
+  <DisplayName value="Dude wheres my car" />
+  <Description value="/dudewheresmycar to list all owned vehicle positions. alternatively you can type /car" />
+	<Author value="McTaco" />
+	<Version value="1.2.27.1" />
+</xml>

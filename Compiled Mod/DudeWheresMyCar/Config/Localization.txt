@@ -1,0 +1,4 @@
+Key,English
+car_loc1,"[[6699CC]DMV[-]] Dude, there's your car"
+car_loc2,"[[6699CC]DMV[-]] Your {0} Location: {1}"
+car_none,"[[CC3333]DMV[-]] I dont know dude"

@@ -1,71 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
 using HarmonyLib;
 
-public class DMV_Init : IModApi
+public class VMV : IModApi
 {
-    //private string serverChatName = "Server";
-    //public static List<EntityCreationData> OnlinePlayersCarList = new List<EntityCreationData>();
-    //public static List<EntityVehicle> OnlinePlayersCarList = new List<EntityVehicle>();
-
     public void InitMod(Mod _modInstance)
     {
         Log.Out(" Loading Patch: " + base.GetType().ToString());
         ModEvents.ChatMessage.RegisterHandler(new global::Func<ClientInfo, EChatType, int, string, string, List<int>, bool>(this.ChatMessage));
-        //Harmony harmony = new Harmony(base.GetType().ToString());
-        //harmony.PatchAll(Assembly.GetExecutingAssembly());
     }
 
-    // check messages to see if someone requested drone location
     public bool ChatMessage(ClientInfo cInfo, EChatType type, int senderId, string msg, string mainName, List<int> recipientEntityIds)
     {
-
-        //LO("Chat message detected");
+        
         if (!string.IsNullOrEmpty(msg) && cInfo != null)
         {
-
-            //PlatformUserIdentifierAbs sendingPUIA = GameManager.Instance.getPersistentPlayerID(cInfo);
-            //Log.Out($"[-----this user send chat -------------] {sendingPUIA}");
-
-            //this works,
-
-            //LO("Chat message detected");
-            if (msg == "/car")
+            if (msg == "/car" || msg == "/dudewheresmycar")
             {
-                //List<EntityCreationData> OnlinePlayersCarList = new List<EntityCreationData>();
-                // Clear vehicle list
-                //OnlinePlayersCarList.Clear();
                 //update vechicle manager
                 VehicleManager.Instance.Save();
                 // get vehicles
                 List<EntityCreationData> vehicles = VehicleManager.Instance.GetVehicles();
-                // iterate vehicles and update 
+                Dictionary<string, int> messagesToSend = new Dictionary<string, int>();
+                bool found = false;
                 for (int i = 0; i < vehicles.Count; i++)
                 {
-                    //var a = vehicles[i] as Vehicle;
-                    // Local chat message data
-                    //OnlinePlayersCarList.Add(vehicles[i]);
-
-
                     PlatformUserIdentifierAbs sendingPUIA = GameManager.Instance.getPersistentPlayerID(cInfo);
-                    Log.Out($"[-----this user send chat -------------] {sendingPUIA}");
-
-                    // Server Console changes
                     EntityCreationData entityCreationData = vehicles[i];
 
                     // test
                     Entity entity = GameManager.Instance.World.GetEntity(entityCreationData.id);
                     EntityVehicle entityVehicle = entity as EntityVehicle;
                     PlatformUserIdentifierAbs ownerId = entityVehicle.vehicle.OwnerId;
-                    Log.Out($"[------------------------------------] vehicle owner id: {ownerId}");
+                    //Log.Out($"[------------------------------------] vehicle owner id: {ownerId}");
 
-                    bool found = false;
                     //Log.Out($"compare: ownerId:{ownerId} sendingPUIA:{sendingPUIA} bool{ownerId == sendingPUIA} string bool:{ownerId.ToString() == sendingPUIA.ToString()}");
                     // found car
                     if (ownerId.ToString() == sendingPUIA.ToString())
                     {
-                        //onlineDrone.pos.ToCultureInvariantString();
+
                         var x = (int)entityCreationData.pos.x;
                         var z = (int)entityCreationData.pos.z;
                         string xdir = "";
@@ -94,14 +69,30 @@ public class DMV_Init : IModApi
                         }
                         string carType = EntityClass.GetEntityClassName(entityCreationData.entityClass);
                         string location = $"{x} {xdir}, {z} {zdir}";
-                        string message = string.Format(Localization.Get("car_loc", false), carType, location);
-                        sayToServer(message, senderId);
+                        if (messagesToSend.Count == 0)
+                        {
+                            string message = string.Format(Localization.Get("car_loc1", false));
+                            messagesToSend.Add(message, senderId);
+                            //sayToServer(message, senderId);
+                        }
+
+                        string message2 = string.Format(Localization.Get("car_loc2", false), carType, location);
+                        messagesToSend.Add(message2, senderId);
+                        //sayToServer(message2, senderId);
                         found = true;
                     }
-                    if (!found)
+                }
+                if (!found)
+                {
+                    string message3 = string.Format(Localization.Get("car_none", false));
+                    //sayToServer(message3, senderId);
+                    messagesToSend.Add(message3, senderId);
+                }
+                if (messagesToSend.Count > 0)
+                {
+                    foreach (var kvp in messagesToSend)
                     {
-                        string message = string.Format(Localization.Get("car_none", false));
-                        sayToServer(message, senderId);
+                        sayToServer(kvp.Key, kvp.Value);
                     }
                 }
                 return false;

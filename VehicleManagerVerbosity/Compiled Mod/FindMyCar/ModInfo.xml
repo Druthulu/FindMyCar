@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<xml>
-	<Name value="FindMyCar" />
-  <DisplayName value="Find My Car" />
-  <Description value="/car to list all vehicle positions" />
-	<Author value="McTaco" />
-	<Version value="1.2.27.1" />
-</xml>
