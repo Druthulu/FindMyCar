@@ -1,6 +1,7 @@
-# FindMyCar
+# FindMyCar (Dedicated Server)
 /dudewheresmycar to list all owned vehicle positions. 
 
+Dedicated Server Only
 
 ![Screenshot 2025-02-12 183817](https://github.com/user-attachments/assets/fe3cfb00-adc2-4738-8ded-7df3130d56f8)
 
