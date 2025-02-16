@@ -7,8 +7,8 @@
     <ProjectGuid>{415AE3EB-3671-427E-8C89-17E3D078C2CC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>VehicleManagerVerbosity</RootNamespace>
-    <AssemblyName>VehicleManagerVerbosity</AssemblyName>
+    <RootNamespace>FindMyCar</RootNamespace>
+    <AssemblyName>FindMyCar</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -56,7 +56,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="VehicleManagerVerbosity.cs" />
+    <Compile Include="FindMyCar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
