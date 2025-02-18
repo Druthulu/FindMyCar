@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System;
+using System.Reflection;
 using UnityEngine;
 
 public class FindMyCar : IModApi
@@ -52,7 +54,123 @@ public class FindMyCar : IModApi
         return true;
     }
 
+    public (bool, Dictionary<string, string>) FindMyCarRegularN(ClientInfo cInfo)
+    {
+        Log.Out($"[FindMyCar] Client {cInfo.playerName} requested vehicle locations");
+        List<EntityCreationData> ecd_vehicleList = VehicleManager.Instance.GetVehicleList();
+        Dictionary<string, string> carInfo = new Dictionary<string, string>(); //car name, car location string
+        Log.Out($"[FindMyCar] Scanning for {cInfo.playerName}'s vehicles");
+        for (int i = 0; i < ecd_vehicleList.Count; i++)
+        {
+            var ecd_vehicle_noPOS = ecd_vehicleList[i];
+            ecd_vehicle_noPOS.pos = new Vector3(0,0,0);
+            EntityVehicle entityVehicle = EntityFactory.CreateEntity(ecd_vehicle_noPOS) as EntityVehicle;
+            PlatformUserIdentifierAbs ownerId = entityVehicle.vehicle.OwnerId;
+            PlatformUserIdentifierAbs sendingPUIA = GameManager.Instance.getPersistentPlayerID(cInfo);
+            if (ownerId.ToString() == sendingPUIA.ToString())
+            {
+                string carType = EntityClass.GetEntityClassName(ecd_vehicleList[i].entityClass);
+                Log.Out($"[FindMyCar] Located {cInfo.playerName}'s {carType} at location: {ecd_vehicleList[i].pos.ToCultureInvariantString()}");
+                string coords = MapCoords(ecd_vehicleList[i].pos);
+                carInfo.Add(carType, coords);
+            }
+            EntityVehicle.Destroy(entityVehicle);
+        }
+        if (carInfo.Count > 0)
+        {
+            return (true, carInfo);
+        }
+        else
+        {
+            Log.Out($"[FindMyCar] Failed to Located {cInfo.playerName}'s car. Player does not have a car");
+            return (false, carInfo);
+        }
+    }
+
+    // 1.2.27.2
     public (bool, Dictionary<string, string>) FindMyCarRegular(ClientInfo cInfo)
+    {
+        Log.Out($"[FindMyCar] Client {cInfo.playerName} requested vehicle locations");
+        string sendingPUIA = GameManager.Instance.getPersistentPlayerID(cInfo).ToString();
+        List<EntityCreationData> ecd_vehicleList = VehicleManager.Instance.GetVehicleList();
+        Dictionary<string, string> carInfo = new Dictionary<string, string>(); //car name, car location string
+        Log.Out($"[FindMyCar] Scanning for {cInfo.playerName}'s vehicles");
+        for (int i = 0; i < ecd_vehicleList.Count; i++)
+        {
+            // prevent null reff errors
+            try
+            {
+                //Log.Out("[FindMyCar] Casting ecd as EV");
+                EntityVehicle entityVehicle = EntityFactory.CreateEntity(ecd_vehicleList[i]) as EntityVehicle;
+                //Log.Out("[FindMyCar] checking if EV null");
+                if (entityVehicle != null)
+                {
+
+                    // error happens when attempting to read data from the vhicle. need to try catch skip
+                    try
+                    {
+                        //Log.Out("[FindMyCar] grabbing vehicle OwnerId");
+                        string ownerId = entityVehicle.vehicle.OwnerId.ToString();
+
+                        //Log.Out("[FindMyCar] comparing Ids");
+                        if (ownerId == sendingPUIA)
+                        {
+                            try
+                            {
+                                //Log.Out("[FindMyCar] casting ecd class as carType");
+                                string carType = EntityClass.GetEntityClassName(ecd_vehicleList[i].entityClass);
+                                //Log.Out($"[FindMyCar] Located {cInfo.playerName}'s {carType} at location: {ecd_vehicleList[i].pos.ToCultureInvariantString()}");
+                                try
+                                {
+                                    string coords = MapCoords(ecd_vehicleList[i].pos);
+                                    carInfo.Add(carType, coords);
+                                }
+                                catch
+                                {
+                                    // failed to get MapCoords
+                                    Log.Warning("[FindMyCar] Failed to get MapCoords, vehicle data may be corrupt");
+                                }
+                               
+                            }
+                            catch
+                            {
+                                // failed to get carType
+                                Log.Warning("[FindMyCar] Failed to get vehicle class name, vehicle data may be corrupt");
+                            }
+                            
+                        }
+                        
+                        
+                    }
+                    catch
+                    {
+                        // failed to get Vehicle ownerId
+                        Log.Warning("[FindMyCar] Failed to get vehicle ownerId, vehicle data may be corrupt");
+                    }
+
+                }
+                EntityVehicle.Destroy(entityVehicle);
+            }
+            catch
+            {
+                // failed to set EV data, skip
+                Log.Warning("[FindMyCar] Failed to cast EntityCreationData as EntityVehicle, vehicle data may be corrupt");
+            }
+
+        }
+        if (carInfo.Count > 0)
+        {
+            return (true, carInfo);
+        }
+        else
+        {
+            Log.Out($"[FindMyCar] Failed to Located {cInfo.playerName}'s car. Player does not have a car");
+            return (false, carInfo);
+        }
+    }
+
+    // 1.2.27.2
+    public (bool, Dictionary<string, string>) FindMyCarRegularOld(ClientInfo cInfo)
     {
         Log.Out($"[FindMyCar] Client {cInfo.playerName} requested vehicle locations");
         List<EntityCreationData> ecd_vehicleList = VehicleManager.Instance.GetVehicleList();
@@ -82,6 +200,8 @@ public class FindMyCar : IModApi
             return (false, carInfo);
         }
     }
+
+
 
     public string MapCoords(Vector3 location)
     {
