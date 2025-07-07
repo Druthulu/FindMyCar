@@ -2,17 +2,22 @@
 using System;
 using System.Reflection;
 using UnityEngine;
+using static ModEvents;
 
 public class FindMyCar : IModApi
 {
     public void InitMod(Mod _modInstance)
     {
         Log.Out(" Loading Patch: " + base.GetType().ToString());
-        ModEvents.ChatMessage.RegisterHandler(new global::Func<ClientInfo, EChatType, int, string, string, List<int>, bool>(this.ChatMessage));
+        ModEvents.ChatMessage.RegisterHandler(this.ChatMessage);
     }
 
-    public bool ChatMessage(ClientInfo cInfo, EChatType type, int senderId, string msg, string mainName, List<int> recipientEntityIds)
+    public ModEvents.EModEventResult ChatMessage(ref ModEvents.SChatMessageData data)
     {
+        var msg = data.Message;
+        var cInfo = data.ClientInfo;
+        var senderId = data.SenderEntityId;
+
         if (!string.IsNullOrEmpty(msg) && cInfo != null)
         {
             if (msg == "/car" || msg == "/dudewheresmycar")
@@ -47,11 +52,11 @@ public class FindMyCar : IModApi
                         sayToServer(kvp.Key, kvp.Value);
                     }
                 }
-                return false;
+                return EModEventResult.StopHandlersAndVanilla;
             }
-            return true;
+            return EModEventResult.Continue;
         }
-        return true;
+        return EModEventResult.Continue;
     }
 
     public (bool, Dictionary<string, string>) FindMyCarRegularN(ClientInfo cInfo)
